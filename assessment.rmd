@@ -1,0 +1,108 @@
+---
+title: "Assessment on R"
+output: html_document
+---
+
+
+##Reading the data and taking care of missing values
+```{r}
+#Read the data and store it in ExDataSet
+ExDataSet <- read.csv("data/exercise.csv")
+
+#Converting Petal.Length outliers to median value
+ExDataSet$Petal.Length[is.na(ExDataSet$Petal.Length)]<-median(ExDataSet$Petal.Length,na.rm = TRUE)
+
+#Converting Petal.Width outliers to median value
+ExDataSet$Petal.Width[is.na(ExDataSet$Petal.Width)]<-median(ExDataSet$Petal.Width,na.rm = TRUE)
+
+#Converting Sepal.Length outliers to median value
+ExDataSet$Sepal.Length[is.na(ExDataSet$Sepal.Length)]<-median(ExDataSet$Sepal.Length,na.rm = TRUE)
+
+#Converting Sepal.Width outliers to median value
+ExDataSet$Sepal.Width[is.na(ExDataSet$Sepal.Width)]<-median(ExDataSet$Sepal.Width,na.rm = TRUE)
+
+#Removing rows with missing data (targeting species to remove the 3 outliers found)
+ExDataSet<-ExDataSet[complete.cases(ExDataSet), ]
+
+#display the structure of the dataset
+str(ExDataSet)
+
+#boxplot showing the outliers in Sepal.Width
+boxplot(ExDataSet$Sepal.Width)
+
+#Display the summary of the dataset
+summary(ExDataSet)
+```
+
+##Find and remove outliers
+
+```{r}
+#tell the system not to plot the outliers
+outliers <- boxplot(ExDataSet$Sepal.Width, plot=FALSE)$out
+ExDataSet <- ExDataSet[-which(ExDataSet$Sepal.Width %in% outliers),]
+
+#boxplot after removing outliers
+boxplot(ExDataSet$Sepal.Width)
+
+#Remove outliersfrom the rest of the columns
+outliers <- boxplot(ExDataSet$Petal.Length, plot=FALSE)$out
+ExDataSet <- ExDataSet[-which(ExDataSet$Petal.Length %in% outliers),]
+
+outliers <- boxplot(ExDataSet$Sepal.Length, plot=FALSE)$out
+ExDataSet <- ExDataSet[-which(ExDataSet$Sepal.Length %in% outliers),]
+
+outliers <- boxplot(ExDataSet$Petal.Width, plot=FALSE)$out
+ExDataSet <- ExDataSet[-which(ExDataSet$Petal.Width %in% outliers),]
+summary(ExDataSet)
+
+#Rename Species to Plants
+colnames(ExDataSet)
+names(ExDataSet)[names(ExDataSet) == "Species"] <- "Plants"
+
+#Add column Petal.Area
+ExDataSet <- transform(ExDataSet, Petal.Area= Petal.Width*Petal.Length)
+```
+
+##Creation of a correlation matrix (Excluding non numeric features)
+
+```{r}
+ExDataSet.cor = cor(ExDataSet[sapply(ExDataSet, is.numeric)])
+ExDataSet.cor
+```
+
+Creating of a heatmap with ggplot2
+
+```{r echo=FALSE}
+#load the libaries
+library(reshape2)
+library(ggplot2)
+
+melted_cormat <- melt(ExDataSet.cor)
+ggplot(data = melted_cormat, aes(x=Var1, y=Var2, fill=value)) + geom_tile()
+```
+
+Creating a Histogram
+
+```{r}
+ggplot(ExDataSet, aes(x=ExDataSet$Petal.Width)) + geom_histogram(binwidth=0.2, color="black", fill="white")
+hist(ExDataSet$Petal.Width)
+```
+
+Plot with colours based on variables
+
+```{r}
+plot(ExDataSet$Petal.Width, ExDataSet$Petal.Length, col=c("red","blue","green")[ExDataSet$Plants])
+```
+
+```{r}
+#library(knitr)
+library(kableExtra)
+#library(dplyr)
+
+Classifier <- c('Random Forest','C5.0','Gradient Boosting Trees')
+Accuracy <- c(0.923, 0.923, 0.926)
+Kappa <- c(0.837, 0.836, 0.844)
+metrics <- data.frame(Classifier, Accuracy, Kappa)
+kable(metrics) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F, position = "left")
+```

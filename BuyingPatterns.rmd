@@ -1,0 +1,44 @@
+---
+title: "Customers Buying Patterns"
+output: html_document
+---
+Loading Libraries
+
+```{r warning=FALSE, message=FALSE}
+#Load libs
+library(ggplot2, quietly = T)
+library(bda, quietly = T)
+library(zoo, quietly = T)
+
+pacman::p_load('dplyr', 'tidyr', 'gapminder',
+               'ggplot2',  'ggalt',
+               'forcats', 'R.utils', 'png', 
+               'grid', 'ggpubr', 'scales',
+               'bbplot')
+devtools::install_github('bbc/bbplot')
+
+```
+
+```{r}
+#Load Data Set
+mydata <- read.csv("data/Blackwell_Hist_Sample.csv")
+
+#Binning age to 4 different bins
+mydata$ageGroup <- cut(mydata$age,breaks=c(0,30,49,65,85))
+
+#Region vs Age Column chart
+ggplot(data = mydata, mapping = aes(x = region, fill = ageGroup)) +
+  geom_bar(position = "dodge", colour="#666666") +
+  labs(x="Region", y="ageCount", title="Region vs Age Groups")
+  # geom_text(mapping = aes(label = ..count..), stat = "count", vjust = -1)
+
+ggplot(mydata, aes(x = region, 
+                           fill = ageGroup)) +
+  geom_bar(stat="identity", position="dodge") +
+  geom_hline(yintercept = 0, size = 1, colour="#333333") +
+  bbc_style() +
+  scale_fill_manual(values = c("#1380A1", "#FAAB18")) +
+  labs(title="We're living longer",
+       subtitle = "Biggest life expectancy rise, 1967-2007")
+```
+
